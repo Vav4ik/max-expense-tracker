@@ -5,7 +5,7 @@ import Input from "./Input";
 import { GlobalStyles } from "../../constants/styles";
 import Button from "../UI/Buttton";
 
-const ExpenseForm = ({ onCancel, submitButtonLabel }) => {
+const ExpenseForm = ({ onCancel, onSubmit, submitButtonLabel }) => {
   const [inputValues, setInputValues] = useState({
     amount: "",
     date: "",
@@ -21,7 +21,14 @@ const ExpenseForm = ({ onCancel, submitButtonLabel }) => {
     });
   };
 
-  const submitHandler = () => {};
+  const submitHandler = () => {
+    const expenseData = {
+      amount: +inputValues.amount,
+      date: new Date(inputValues.date),
+      description: inputValues.description,
+    };
+    onSubmit(expenseData);
+  };
 
   return (
     <View style={styles.form}>
@@ -42,7 +49,7 @@ const ExpenseForm = ({ onCancel, submitButtonLabel }) => {
           textInputConfig={{
             placeholder: "YYYY-MM-DD",
             maxLength: 10,
-            onChangeText: inputChangeHandler.bind(null, "date"),
+            onChangeText: inputChangeHandler.bind(this, "date"),
             value: inputValues.date,
           }}
         />
@@ -53,7 +60,7 @@ const ExpenseForm = ({ onCancel, submitButtonLabel }) => {
           multiline: true,
           autoCorrect: false, //default is true
           // autoCapitalize: "words", //default is "sentences", also there is "none" and "characters"
-          onCahngeText: inputChangeHandler.bind(null, "description"),
+          onChangeText: inputChangeHandler.bind(this, "description"),
           value: inputValues.description,
         }}
       />
