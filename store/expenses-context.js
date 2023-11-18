@@ -44,10 +44,10 @@ export const ExpensesContext = createContext({
 const expensesReducer = (state, action) => {
   switch (action.type) {
     case "ADD":
-      const id = new Date().getTime().toString() + Math.random().toString();
-      return [{ id, ...action.payload }, ...state];
+      return [action.payload, ...state];
     case "SET":
-      return action.payload;
+      const inverted = action.payload.reverse();
+      return inverted;
     case "DELETE":
       return state.filter((expense) => expense.id !== action.payload);
     case "UPDATE":
