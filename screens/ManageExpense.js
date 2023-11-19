@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect } from "react";
+import { useContext, useLayoutEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { GlobalStyles } from "../constants/styles";
@@ -7,10 +7,15 @@ import IconButton from "../components/UI/IconButton";
 import Button from "../components/UI/Buttton";
 import ExpenseForm from "../components/ManageExpense/ExpenseForm";
 import { deleteExpense, storeExpense, updateExpense } from "../utils/http";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
 
 const ManageExpense = ({ route, navigation }) => {
   const editedExpenseId = route.params?.expenseId;
   const isEditing = !!editedExpenseId;
+
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState(null);
 
   const expenseCtx = useContext(ExpensesContext);
 
@@ -25,9 +30,19 @@ const ManageExpense = ({ route, navigation }) => {
   }, [navigation, isEditing]);
 
   const deleteExpenseHandler = async () => {
-    await deleteExpense(editedExpenseId);
-    expenseCtx.deleteExpense(editedExpenseId);
-    navigation.goBack();
+    setIsSending(true);
+    try {
+      await deleteExpense(editedExpenseId);
+      expenseCtx.deleteExpense(editedExpenseId);
+      navigation.goBack();
+    } catch (error) {
+      if (error.message) {
+        setError(error.message);
+      } else {
+        setError("Something went wrong! Please try again later...");
+      }
+    }
+    setIsSending(false);
   };
 
   const cancelHandler = () => {
@@ -35,15 +50,37 @@ const ManageExpense = ({ route, navigation }) => {
   };
 
   const confirmHandler = async (expense) => {
-    if (isEditing) {
-      await updateExpense(editedExpenseId, expense);
-      expenseCtx.updateExpense(editedExpenseId, expense);
-    } else {
-      const id = await storeExpense(expense);
-      expenseCtx.addExpense({ id, ...expense });
+    setIsSending(true);
+    try {
+      if (isEditing) {
+        await updateExpense(editedExpenseId, expense);
+        expenseCtx.updateExpense(editedExpenseId, expense);
+      } else {
+        const id = await storeExpense(expense);
+        expenseCtx.addExpense({ id, ...expense });
+      }
+      navigation.goBack();
+    } catch (error) {
+      if (error.message) {
+        setError(error.message);
+      } else {
+        setError("Something went wrong! Please try again later...");
+      }
     }
-    navigation.goBack();
+    setIsSending(false);
   };
+
+  if (isSending) {
+    return <LoadingOverlay />;
+  }
+
+  const errorHandler = () => {
+    setError(null);
+  };
+
+  if (error && !isSending) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
 
   return (
     <View style={styles.container}>
